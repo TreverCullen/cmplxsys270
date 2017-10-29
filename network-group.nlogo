@@ -1,5 +1,6 @@
-extensions [ nw array ]
+extensions [ nw array table]
 turtles-own [ ideas awesomeness ]
+globals [ arr-dict ]
 
 ;; load and save a network
 to save
@@ -27,10 +28,22 @@ to create-ideas
   ])
 end
 
+to make-dict
+  let arr1 [2 67 39]
+  let arr2 [4 36]
+  let arr3 [3 45 98 22]
+  let dict table:make
+  table:put dict arr1 .8
+  table:put dict arr2 0
+  table:put dict arr3 .36
+  set arr-dict dict
+  show arr-dict
+end
 
 ;; setup network
 to setup
   clear-all
+  make-dict
   nw:generate-random turtles links num-nodes connectivity [ set color node-color ]
   ask turtles [fd 6 set shape "circle" set size .5]
   layout-circle turtles radius
@@ -113,7 +126,6 @@ to color-turtles
     set color scale-color node-color awesomeness 0 100
   ]
 end
-
 
 
 @#$#@#$#@
