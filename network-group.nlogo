@@ -157,9 +157,9 @@ end
 
 @#$#@#$#@
 GRAPHICS-WINDOW
-250
+216
 10
-687
+653
 448
 -1
 -1
@@ -184,11 +184,11 @@ ticks
 30.0
 
 BUTTON
-21
-13
-129
-46
-random setup
+12
+42
+100
+75
+random
 setup
 NIL
 1
@@ -201,11 +201,11 @@ NIL
 1
 
 BUTTON
-20
-51
-217
-84
-preferential attachment setup
+37
+167
+187
+200
+preferential attachment
 preferential-attachment
 NIL
 1
@@ -218,11 +218,11 @@ NIL
 1
 
 BUTTON
-21
-90
-169
-123
-watts-strogatz setup
+37
+208
+187
+241
+watts-strogatz
 watts-strogatz
 NIL
 1
@@ -235,11 +235,11 @@ NIL
 1
 
 BUTTON
-20
-128
-146
-161
-small world setup
+12
+82
+100
+115
+small world
 small-world
 NIL
 1
@@ -252,10 +252,10 @@ NIL
 1
 
 SLIDER
-705
-272
-877
-305
+701
+192
+873
+225
 num-nodes
 num-nodes
 1
@@ -267,10 +267,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-705
-312
-877
-345
+701
+232
+873
+265
 connectivity
 connectivity
 0
@@ -282,10 +282,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-707
-232
-879
-265
+703
+152
+875
+185
 radius
 radius
 1
@@ -297,10 +297,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-704
-392
-876
-425
+700
+312
+872
+345
 num-rows
 num-rows
 2
@@ -312,10 +312,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-705
-429
-877
-462
+701
+349
+873
+382
 num-cols
 num-cols
 2
@@ -327,10 +327,10 @@ NIL
 HORIZONTAL
 
 INPUTBOX
-708
-165
-863
-225
+703
+81
+858
+141
 node-color
 65.0
 1
@@ -338,11 +338,11 @@ node-color
 Color
 
 BUTTON
-13
-256
-123
-289
-star setup
+108
+83
+197
+116
+star
 star
 NIL
 1
@@ -355,11 +355,11 @@ NIL
 1
 
 BUTTON
-13
-297
-111
-330
-wheel setup
+108
+122
+197
+155
+wheel
 wheel
 NIL
 1
@@ -372,10 +372,10 @@ NIL
 1
 
 SLIDER
-705
-350
-877
-383
+701
+270
+873
+303
 neighborhood-size
 neighborhood-size
 0
@@ -387,61 +387,61 @@ NIL
 HORIZONTAL
 
 TEXTBOX
-888
-235
-1038
-253
+884
+155
+1034
+173
 Applies to all
 11
 0.0
 1
 
 TEXTBOX
-889
-279
-1039
-321
+885
+199
+1035
+241
 Applies to all except small world. Minimum of 5 works for all.
 11
 0.0
 1
 
 TEXTBOX
-889
-317
-1039
-345
+885
+237
+1035
+265
 Applies to random, watts-strogatz
 11
 0.0
 1
 
 TEXTBOX
-891
-355
-1041
-397
+887
+275
+1037
+317
 Applies to watts-strogatz\nMUST BE LESS THAN 1/2 of NUM-NODES
 11
 0.0
 1
 
 TEXTBOX
-887
-434
-1037
-452
+883
+354
+1033
+372
 small-world creates a matrix
 11
 0.0
 1
 
 BUTTON
-22
-172
-117
-205
-ring setup
+12
+122
+100
+155
+ring
 ring
 NIL
 1
@@ -454,11 +454,11 @@ NIL
 1
 
 BUTTON
-17
-215
-123
-248
-lattice setup
+108
+43
+197
+76
+lattice
 lattice
 NIL
 1
@@ -493,10 +493,10 @@ network.txt
 String
 
 BUTTON
-18
-350
-129
-383
+11
+294
+95
+327
 load network
 load
 NIL
@@ -510,10 +510,10 @@ NIL
 1
 
 BUTTON
-24
-400
-136
-433
+106
+295
+189
+328
 save network
 save
 NIL
@@ -538,10 +538,10 @@ pretty.txt
 String
 
 BUTTON
-37
-455
-100
-488
+71
+366
+134
+399
 NIL
 go
 T
@@ -552,6 +552,36 @@ NIL
 NIL
 NIL
 NIL
+1
+
+TEXTBOX
+88
+14
+119
+32
+setup
+11
+0.0
+1
+
+TEXTBOX
+75
+271
+138
+289
+load/save
+11
+0.0
+1
+
+TEXTBOX
+91
+344
+116
+362
+run
+11
+0.0
 1
 
 @#$#@#$#@
