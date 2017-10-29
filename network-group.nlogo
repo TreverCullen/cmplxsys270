@@ -28,6 +28,7 @@ end
 to pre-setup
   clear-all
   reset-ticks
+  make-dict
 end
 
 to make-dict
@@ -42,9 +43,9 @@ to make-dict
   show arr-dict
 end
 
+
 to setup
   pre-setup
-  make-dict
   nw:generate-random turtles links num-nodes connectivity [ set color node-color ]
   ask turtles [fd 6 set shape "circle" set size .5]
   layout-circle turtles radius
@@ -52,13 +53,129 @@ to setup
   color-turtles
 end
 
+to preferential-attachment
+  pre-setup
+  nw:generate-preferential-attachment turtles links num-nodes [ set color node-color ]
+  layout-circle turtles radius
+  create-ideas
+  color-turtles
+end
+
+to watts-strogatz
+  pre-setup
+  nw:generate-watts-strogatz turtles links num-nodes neighborhood-size connectivity [ fd 10 set color node-color ]
+  layout-circle turtles radius
+  create-ideas
+  color-turtles
+end
+
+to small-world
+  pre-setup
+  nw:generate-small-world turtles links num-rows num-cols 2.0 True
+  layout-circle turtles radius
+  create-ideas
+  color-turtles
+end
+
+to lattice
+  pre-setup
+  nw:generate-lattice-2d turtles links world-height world-width false [ set color node-color ]
+  (foreach (sort turtles) (sort patches) [
+    [t p] -> ask t [ move-to p ] ;; ask turtle to move to the specified patch
+  ])
+  create-ideas
+  color-turtles
+end
+
+to ring
+  pre-setup
+  prettify "ring"
+  nw:generate-ring turtles links num-nodes [ set color node-color ]
+  layout-circle sort turtles radius
+  create-ideas
+  color-turtles
+end
+
+to star
+  pre-setup
+  prettify "star"
+  nw:generate-star turtles links num-nodes [ set color node-color ]
+  layout-radial turtles links (turtle 0)
+  create-ideas
+  color-turtles
+end
+
+to wheel
+  pre-setup
+  prettify "wheel"
+  nw:generate-wheel turtles links num-nodes [ set color node-color ]
+  layout-circle sort turtles 8
+  ask turtle (count turtles - 1) [ setxy 0 0 ]
+  create-ideas
+  color-turtles
+end
+
+
+;; create ideas for each turtle
+
 to create-ideas
   (foreach (sort turtles) [
     [t] -> ask t [ set ideas array:from-list n-values 8 [random 100] ]
   ])
-
   make-good-idea-set
 end
+
+
+;; recolor the turtles based on idea strength
+
+to color-turtles
+  ask turtles [
+    set shape "circle" set size .5
+    let result 0
+    (foreach (array:to-list ideas) [
+      [val] -> set result result + val
+    ])
+    set awesomeness result / 8
+    set color scale-color node-color awesomeness 0 100
+  ]
+end
+
+
+;; run the model
+
+to go
+  if ticks >= 50 [stop] ; spec says 50 iterations
+  ask turtles [
+    exchange-ideas
+  ]
+  tick
+end
+
+;; each turtle picks another turtle to exchange ideas with
+
+to exchange-ideas
+  output-show "comparing ideas"
+  let to_compare 0
+  let neighbor one-of nw:turtles-in-radius 1
+  ask neighbor [
+     set to_compare ideas
+  ]
+
+  let i 0
+  while [ i < num-bits-to-share ] [
+    ;show array:item ideas i
+    ;show array:item to_compare i
+    set i i + 1
+  ]
+  show ideas
+  show to_compare
+end
+
+
+
+
+
+;; hardcoded good idea set
 
 to make-good-idea-set
   let goodideas table:make
@@ -227,120 +344,6 @@ end
 
 
 
-to preferential-attachment
-  pre-setup
-  nw:generate-preferential-attachment turtles links num-nodes [ set color node-color ]
-  layout-circle turtles radius
-  create-ideas
-  color-turtles
-end
-
-to watts-strogatz
-  pre-setup
-  nw:generate-watts-strogatz turtles links num-nodes neighborhood-size connectivity [ fd 10 set color node-color ]
-  layout-circle turtles radius
-  create-ideas
-  color-turtles
-end
-
-to small-world
-  pre-setup
-  nw:generate-small-world turtles links num-rows num-cols 2.0 True
-  layout-circle turtles radius
-  create-ideas
-  color-turtles
-end
-
-to lattice
-  pre-setup
-  nw:generate-lattice-2d turtles links world-height world-width false [ set color node-color ]
-  (foreach (sort turtles) (sort patches) [
-    [t p] -> ask t [ move-to p ] ;; ask turtle to move to the specified patch
-  ])
-  create-ideas
-  color-turtles
-end
-
-to ring
-  pre-setup
-  prettify "ring"
-  nw:generate-ring turtles links num-nodes [ set color node-color ]
-  layout-circle sort turtles radius
-  create-ideas
-  color-turtles
-end
-
-to star
-  pre-setup
-  prettify "star"
-  nw:generate-star turtles links num-nodes [ set color node-color ]
-  layout-radial turtles links (turtle 0)
-  create-ideas
-  color-turtles
-end
-
-to wheel
-  pre-setup
-  prettify "wheel"
-  nw:generate-wheel turtles links num-nodes [ set color node-color ]
-  layout-circle sort turtles 8
-  ask turtle (count turtles - 1) [ setxy 0 0 ]
-  create-ideas
-  color-turtles
-end
-
-
-;; create ideas for each turtle
-
-to create-ideas
-  (foreach (sort turtles) [
-    [t] -> ask t [ set ideas array:from-list n-values 8 [random 100] ]
-  ])
-end
-
-
-;; recolor the turtles based on idea strength
-
-to color-turtles
-  ask turtles [
-    set shape "circle" set size .5
-    let result 0
-    (foreach (array:to-list ideas) [
-      [val] -> set result result + val
-    ])
-    set awesomeness result / 8
-    set color scale-color node-color awesomeness 0 100
-  ]
-end
-
-
-;; run the model
-
-to go
-  if ticks >= 50 [stop] ; spec says 50 iterations
-  ask turtles [
-    exchange-ideas
-  ]
-  tick
-end
-
-;; each turtle picks another turtle to exchange ideas with
-
-to exchange-ideas
-  output-show "comparing ideas"
-  let to_compare 0
-  let neighbor one-of nw:turtles-in-radius 1
-  ask neighbor [
-     set to_compare ideas
-  ]
-
-  show ideas
-  show to_compare
-end
-
-
-
-
 
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -462,7 +465,7 @@ connectivity
 connectivity
 0
 1
-0.1
+0.5
 .1
 1
 NIL
@@ -477,7 +480,7 @@ radius
 radius
 1
 15
-6.0
+10.0
 1
 1
 NIL
@@ -492,7 +495,7 @@ num-rows
 num-rows
 2
 10
-5.0
+2.0
 1
 1
 NIL
@@ -507,7 +510,7 @@ num-cols
 num-cols
 2
 10
-6.0
+2.0
 1
 1
 NIL
@@ -567,7 +570,7 @@ neighborhood-size
 neighborhood-size
 0
 10
-1.0
+0.0
 1
 1
 NIL
@@ -770,6 +773,21 @@ run
 11
 0.0
 1
+
+SLIDER
+701
+392
+873
+425
+num-bits-to-share
+num-bits-to-share
+0
+8
+8.0
+1
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
