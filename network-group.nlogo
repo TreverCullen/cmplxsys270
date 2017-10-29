@@ -190,7 +190,7 @@ to make-good-idea-set
 
   table:put goodideas [8 9 10] random 100;
 
-  print goodideas
+  ;;print goodideas
 end
 
 
