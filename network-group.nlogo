@@ -1,8 +1,9 @@
-extensions [ nw array table]
+extensions [ nw array table ]
 turtles-own [ ideas awesomeness ]
-globals [ arr-dict ]
+globals [arr-dict]
 
 ;; load and save a network
+
 to save
   nw:save-matrix filename-to-save
   clear-all
@@ -22,10 +23,11 @@ to prettify [ network ]
 end
 
 
-to create-ideas
-  (foreach (sort turtles) [
-    [t] -> ask t [ set ideas array:from-list n-values 8 [random 100] ]
-  ])
+;; setup network
+
+to pre-setup
+  clear-all
+  reset-ticks
 end
 
 to make-dict
@@ -40,9 +42,8 @@ to make-dict
   show arr-dict
 end
 
-;; setup network
 to setup
-  clear-all
+  pre-setup
   make-dict
   nw:generate-random turtles links num-nodes connectivity [ set color node-color ]
   ask turtles [fd 6 set shape "circle" set size .5]
@@ -52,7 +53,7 @@ to setup
 end
 
 to preferential-attachment
-  clear-all
+  pre-setup
   nw:generate-preferential-attachment turtles links num-nodes [ set color node-color ]
   layout-circle turtles radius
   create-ideas
@@ -60,7 +61,7 @@ to preferential-attachment
 end
 
 to watts-strogatz
-  clear-all
+  pre-setup
   nw:generate-watts-strogatz turtles links num-nodes neighborhood-size connectivity [ fd 10 set color node-color ]
   layout-circle turtles radius
   create-ideas
@@ -68,7 +69,7 @@ to watts-strogatz
 end
 
 to small-world
-  clear-all
+  pre-setup
   nw:generate-small-world turtles links num-rows num-cols 2.0 True
   layout-circle turtles radius
   create-ideas
@@ -76,7 +77,7 @@ to small-world
 end
 
 to lattice
-  clear-all
+  pre-setup
   nw:generate-lattice-2d turtles links world-height world-width false [ set color node-color ]
   (foreach (sort turtles) (sort patches) [
     [t p] -> ask t [ move-to p ] ;; ask turtle to move to the specified patch
@@ -86,7 +87,7 @@ to lattice
 end
 
 to ring
-  clear-all
+  pre-setup
   prettify "ring"
   nw:generate-ring turtles links num-nodes [ set color node-color ]
   layout-circle sort turtles radius
@@ -95,7 +96,7 @@ to ring
 end
 
 to star
-  clear-all
+  pre-setup
   prettify "star"
   nw:generate-star turtles links num-nodes [ set color node-color ]
   layout-radial turtles links (turtle 0)
@@ -104,7 +105,7 @@ to star
 end
 
 to wheel
-  clear-all
+  pre-setup
   prettify "wheel"
   nw:generate-wheel turtles links num-nodes [ set color node-color ]
   layout-circle sort turtles 8
@@ -114,7 +115,17 @@ to wheel
 end
 
 
+;; create ideas for each turtle
+
+to create-ideas
+  (foreach (sort turtles) [
+    [t] -> ask t [ set ideas array:from-list n-values 8 [random 100] ]
+  ])
+end
+
+
 ;; recolor the turtles based on idea strength
+
 to color-turtles
   ask turtles [
     set shape "circle" set size .5
@@ -128,11 +139,40 @@ to color-turtles
 end
 
 
+;; run the model
+
+to go
+  if ticks >= 50 [stop] ; spec says 50 iterations
+  ask turtles [
+    exchange-ideas
+  ]
+  tick
+end
+
+;; each turtle picks another turtle to exchange ideas with
+
+to exchange-ideas
+  output-show "comparing ideas"
+  let to_compare 0
+  let neighbor one-of nw:turtles-in-radius 1
+  ask neighbor [
+     set to_compare ideas
+  ]
+
+  show ideas
+  show to_compare
+end
+
+
+
+
+
+
 @#$#@#$#@
 GRAPHICS-WINDOW
-184
+250
 10
-621
+687
 448
 -1
 -1
@@ -225,9 +265,9 @@ NIL
 1
 
 SLIDER
-639
+705
 272
-811
+877
 305
 num-nodes
 num-nodes
@@ -240,9 +280,9 @@ NIL
 HORIZONTAL
 
 SLIDER
-639
+705
 312
-811
+877
 345
 connectivity
 connectivity
@@ -255,9 +295,9 @@ NIL
 HORIZONTAL
 
 SLIDER
-641
+707
 232
-813
+879
 265
 radius
 radius
@@ -270,9 +310,9 @@ NIL
 HORIZONTAL
 
 SLIDER
-638
+704
 392
-810
+876
 425
 num-rows
 num-rows
@@ -285,9 +325,9 @@ NIL
 HORIZONTAL
 
 SLIDER
-639
+705
 429
-811
+877
 462
 num-cols
 num-cols
@@ -300,9 +340,9 @@ NIL
 HORIZONTAL
 
 INPUTBOX
-642
+708
 165
-797
+863
 225
 node-color
 65.0
@@ -345,9 +385,9 @@ NIL
 1
 
 SLIDER
-639
+705
 350
-811
+877
 383
 neighborhood-size
 neighborhood-size
@@ -360,9 +400,9 @@ NIL
 HORIZONTAL
 
 TEXTBOX
-822
+888
 235
-972
+1038
 253
 Applies to all
 11
@@ -370,9 +410,9 @@ Applies to all
 1
 
 TEXTBOX
-823
+889
 279
-973
+1039
 321
 Applies to all except small world. Minimum of 5 works for all.
 11
@@ -380,9 +420,9 @@ Applies to all except small world. Minimum of 5 works for all.
 1
 
 TEXTBOX
-823
+889
 317
-973
+1039
 345
 Applies to random, watts-strogatz
 11
@@ -390,9 +430,9 @@ Applies to random, watts-strogatz
 1
 
 TEXTBOX
-825
+891
 355
-975
+1041
 397
 Applies to watts-strogatz\nMUST BE LESS THAN 1/2 of NUM-NODES
 11
@@ -400,9 +440,9 @@ Applies to watts-strogatz\nMUST BE LESS THAN 1/2 of NUM-NODES
 1
 
 TEXTBOX
-821
+887
 434
-971
+1037
 452
 small-world creates a matrix
 11
@@ -444,10 +484,10 @@ NIL
 1
 
 INPUTBOX
-648
-17
-771
-77
+702
+13
+803
+73
 filename-to-save
 network.txt
 1
@@ -455,10 +495,10 @@ network.txt
 String
 
 INPUTBOX
-782
-19
-938
-79
+809
+13
+913
+73
 filename-to-load
 network.txt
 1
@@ -500,15 +540,32 @@ NIL
 1
 
 INPUTBOX
-648
-98
-813
-158
+919
+13
+1035
+73
 filename-to-prettify
 pretty.txt
 1
 0
 String
+
+BUTTON
+37
+455
+100
+488
+NIL
+go
+T
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
