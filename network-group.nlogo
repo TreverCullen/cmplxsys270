@@ -5,19 +5,19 @@ globals [arr-dict]
 ;; load and save a network
 
 to save
-  nw:save-matrix filename-to-save
+  nw:save-matrix save-filename
   clear-all
 end
 
 to load
   clear-all
-  nw:load-matrix filename-to-load turtles links
+  nw:load-matrix load-filename turtles links
   layout-circle sort turtles 8
   ask turtle (count turtles - 1) [ setxy 0 0 ]
 end
 
 to prettify [ network ]
-  file-open filename-to-prettify
+  file-open prettify-filename
   file-write network
   file-close
 end
@@ -154,21 +154,40 @@ end
 ;; each turtle picks another turtle to exchange ideas with
 
 to exchange-ideas
-  output-show "comparing ideas"
+  ;output-show "comparing ideas"
+  let orig 0
   let to_compare 0
   let neighbor one-of nw:turtles-in-radius 1
   ask neighbor [
      set to_compare ideas
   ]
 
+  ; sort ideas
+  if share-type != "random" [
+    ;set orig sort array:to-list ideas
+    ;set to_compare sort array:to-list to_compare
+  ]
+
+  let min1 0
+  let min2 0
+  let max1 0
+
   let i 0
   while [ i < num-bits-to-share ] [
-    ;show array:item ideas i
-    ;show array:item to_compare i
+    let j 0
+    while [ j < num-bits-to-share ] [
+      ;print "comparing"
+      ;show array:item ideas i
+      ;print "with"
+      ;show array:item to_compare j
+
+      set j j + 1
+    ]
     set i i + 1
   ]
-  show ideas
-  show to_compare
+
+  ;show ideas
+  ;show to_compare
 end
 
 
@@ -347,13 +366,13 @@ end
 
 @#$#@#$#@
 GRAPHICS-WINDOW
-216
+209
 10
-653
-448
+650
+452
 -1
 -1
-13.0
+13.121212121212123
 1
 10
 1
@@ -375,9 +394,9 @@ ticks
 
 BUTTON
 12
-42
+35
 100
-75
+68
 random
 setup
 NIL
@@ -391,11 +410,11 @@ NIL
 1
 
 BUTTON
-37
-167
-187
-200
-preferential attachment
+12
+156
+100
+189
+pref. attach.
 preferential-attachment
 NIL
 1
@@ -408,10 +427,10 @@ NIL
 1
 
 BUTTON
-37
-208
-187
-241
+12
+116
+100
+149
 watts-strogatz
 watts-strogatz
 NIL
@@ -426,9 +445,9 @@ NIL
 
 BUTTON
 12
-82
+75
 100
-115
+108
 small world
 small-world
 NIL
@@ -442,10 +461,10 @@ NIL
 1
 
 SLIDER
-701
-192
-873
-225
+661
+75
+797
+108
 num-nodes
 num-nodes
 1
@@ -457,10 +476,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-701
-232
-873
-265
+662
+115
+797
+148
 connectivity
 connectivity
 0
@@ -472,10 +491,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-703
-152
-875
-185
+661
+36
+797
+69
 radius
 radius
 1
@@ -487,10 +506,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-700
-312
-872
-345
+804
+36
+939
+69
 num-rows
 num-rows
 2
@@ -502,10 +521,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-701
-349
-873
-382
+804
+75
+939
+108
 num-cols
 num-cols
 2
@@ -517,10 +536,10 @@ NIL
 HORIZONTAL
 
 INPUTBOX
-703
-81
-858
-141
+662
+311
+820
+371
 node-color
 65.0
 1
@@ -529,9 +548,9 @@ Color
 
 BUTTON
 108
-83
-197
 116
+197
+149
 star
 star
 NIL
@@ -546,9 +565,9 @@ NIL
 
 BUTTON
 108
-122
+156
 197
-155
+189
 wheel
 wheel
 NIL
@@ -562,10 +581,10 @@ NIL
 1
 
 SLIDER
-701
-270
-873
-303
+662
+154
+797
+187
 neighborhood-size
 neighborhood-size
 0
@@ -576,61 +595,11 @@ neighborhood-size
 NIL
 HORIZONTAL
 
-TEXTBOX
-884
-155
-1034
-173
-Applies to all
-11
-0.0
-1
-
-TEXTBOX
-885
-199
-1035
-241
-Applies to all except small world. Minimum of 5 works for all.
-11
-0.0
-1
-
-TEXTBOX
-885
-237
-1035
-265
-Applies to random, watts-strogatz
-11
-0.0
-1
-
-TEXTBOX
-887
-275
-1037
-317
-Applies to watts-strogatz\nMUST BE LESS THAN 1/2 of NUM-NODES
-11
-0.0
-1
-
-TEXTBOX
-883
-354
-1033
-372
-small-world creates a matrix
-11
-0.0
-1
-
 BUTTON
-12
-122
-100
-155
+108
+76
+196
+109
 ring
 ring
 NIL
@@ -645,9 +614,9 @@ NIL
 
 BUTTON
 108
-43
+35
 197
-76
+68
 lattice
 lattice
 NIL
@@ -661,32 +630,32 @@ NIL
 1
 
 INPUTBOX
-702
-13
-803
-73
-filename-to-save
+12
+324
+101
+384
+save-filename
 network.txt
 1
 0
 String
 
 INPUTBOX
-809
-13
-913
-73
-filename-to-load
+109
+324
+197
+384
+load-filename
 network.txt
 1
 0
 String
 
 BUTTON
-11
-294
-95
-327
+12
+283
+101
+316
 load network
 load
 NIL
@@ -700,10 +669,10 @@ NIL
 1
 
 BUTTON
-106
-295
-189
-328
+108
+283
+197
+316
 save network
 save
 NIL
@@ -717,21 +686,21 @@ NIL
 1
 
 INPUTBOX
-919
 13
-1035
-73
-filename-to-prettify
+392
+197
+452
+prettify-filename
 pretty.txt
 1
 0
 String
 
 BUTTON
-71
-366
-134
-399
+12
+216
+101
+249
 NIL
 go
 T
@@ -755,30 +724,30 @@ setup
 1
 
 TEXTBOX
-75
-271
-138
-289
+77
+260
+132
+278
 load/save
 11
 0.0
 1
 
 TEXTBOX
-91
-344
-116
-362
+92
+196
+117
+214
 run
 11
 0.0
 1
 
 SLIDER
-701
-392
-873
-425
+804
+115
+939
+148
 num-bits-to-share
 num-bits-to-share
 0
@@ -788,6 +757,64 @@ num-bits-to-share
 1
 NIL
 HORIZONTAL
+
+CHOOSER
+662
+219
+820
+264
+share-type
+share-type
+"best" "worst" "random"
+0
+
+SWITCH
+662
+270
+820
+303
+miscommunication?
+miscommunication?
+1
+1
+-1000
+
+BUTTON
+108
+216
+196
+249
+step
+go
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+TEXTBOX
+758
+14
+842
+32
+slider variables
+11
+0.0
+1
+
+TEXTBOX
+767
+199
+850
+217
+other variables
+11
+0.0
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
