@@ -120,7 +120,8 @@ end
 
 to create-ideas
   (foreach (sort turtles) [
-    [t] -> ask t [ set ideas array:from-list n-values 8 [random 100] ]
+    ;[t] -> ask t [ set ideas array:from-list n-values 8 [random 100] ]
+    [t] -> ask t [ set ideas n-values 8 [random 100] show ideas]
   ])
   make-good-idea-set
 end
@@ -132,7 +133,7 @@ to color-turtles
   ask turtles [
     set shape "circle" set size .5
     let result 0
-    (foreach (array:to-list ideas) [
+    (foreach (ideas) [
       [val] -> set result result + val
     ])
     set awesomeness result / 8
@@ -148,14 +149,14 @@ to go
   ask turtles [
     exchange-ideas
   ]
+  color-turtles
   tick
 end
 
 ;; each turtle picks another turtle to exchange ideas with
 
 to exchange-ideas
-  ;output-show "comparing ideas"
-  let orig 0
+  output-show "comparing ideas"
   let to_compare 0
   let neighbor one-of nw:turtles-in-radius 1
   ask neighbor [
@@ -163,9 +164,13 @@ to exchange-ideas
   ]
 
   ; sort ideas
-  if share-type != "random" [
-    ;set orig sort array:to-list ideas
-    ;set to_compare sort array:to-list to_compare
+  if share-type = "best" [
+    set ideas sort-by < ideas
+    set to_compare sort-by < to_compare
+  ]
+  if share-type = "worst" [
+    set ideas sort-by > ideas
+    set to_compare sort-by > to_compare
   ]
 
   let min1 0
@@ -177,9 +182,9 @@ to exchange-ideas
     let j 0
     while [ j < num-bits-to-share ] [
       ;print "comparing"
-      ;show array:item ideas i
+      ;show ideas i
       ;print "with"
-      ;show array:item to_compare j
+      ;show to_compare j
 
       set j j + 1
     ]
@@ -359,7 +364,6 @@ to make-good-idea-set
 
   ;;print goodideas
 end
-
 
 
 
@@ -766,7 +770,7 @@ CHOOSER
 share-type
 share-type
 "best" "worst" "random"
-0
+1
 
 SWITCH
 662
