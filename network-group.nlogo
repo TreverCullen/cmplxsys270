@@ -1,6 +1,7 @@
 extensions [ nw array table ]
 turtles-own [ ideas awesomeness ideas-sum ideas-avg]
 globals [arr-dict avg-idea-value]
+undirected-link-breed [network-links network-link]
 
 ;; load and save a network
 
@@ -79,12 +80,27 @@ end
 
 to lattice
   pre-setup
-  nw:generate-lattice-2d turtles links world-height world-width false [ set color node-color ]
-  (foreach (sort turtles) (sort patches) [
-    [t p] -> ask t [ move-to p ] ;; ask turtle to move to the specified patch
-  ])
+  ;nw:generate-lattice-2d turtles links (grid-size / 2) (grid-size / 2) false [set color red]
+
+  set-default-shape turtles "circle"
+  ; create the grid of nodes
+  ask patches with [abs pxcor < (grid-size / 2) and abs pycor < (grid-size / 2)]
+    [ sprout 1 [ set color blue ] ]
+
+    ask turtles [
+    let neighbor-nodes turtle-set [turtles-here] of neighbors4
+    create-network-links-with neighbor-nodes
+  ]
+
+  ; spread the nodes out
+  ask turtles [
+    setxy (xcor * (max-pxcor - 1) / (grid-size / 2 - 0.5))
+          (ycor * (max-pycor - 1) / (grid-size / 2 - 0.5))
+  ]
+  reset-ticks
   create-ideas
   color-turtles
+
 end
 
 to ring
@@ -373,7 +389,6 @@ to make-good-idea-set
 
   ;;print goodideas
 end
-
 
 
 @#$#@#$#@
@@ -856,6 +871,21 @@ avg-idea-value
 17
 1
 11
+
+SLIDER
+807
+156
+979
+189
+grid-size
+grid-size
+0
+30
+10.0
+1
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
