@@ -1,6 +1,6 @@
 extensions [ nw array table ]
-turtles-own [ ideas awesomeness ]
-globals [arr-dict]
+turtles-own [ ideas awesomeness ideas-sum ideas-avg]
+globals [arr-dict avg-idea-value]
 
 ;; load and save a network
 
@@ -121,8 +121,17 @@ end
 to create-ideas
   (foreach (sort turtles) [
     ;[t] -> ask t [ set ideas array:from-list n-values 8 [random 100] ]
-    [t] -> ask t [ set ideas n-values 8 [random 100] show ideas]
+    [t] -> ask t [ set ideas n-values 8 [random 100] show ideas ]
   ])
+
+  let master-sum 90
+  (foreach (sort turtles) [
+    [t] -> ask t [set ideas-avg (item 0 ideas + item 1 ideas + item 2 ideas + item 3 ideas + item 4 ideas +
+      item 5 ideas + item 6 ideas + item 7 ideas) / 8 show ideas-avg]
+  ])
+  set avg-idea-value sum [ideas-avg] of turtles / num-nodes
+  show avg-idea-value
+
   make-good-idea-set
 end
 
@@ -364,7 +373,6 @@ to make-good-idea-set
 
   ;;print goodideas
 end
-
 
 
 
@@ -819,6 +827,35 @@ other variables
 11
 0.0
 1
+
+PLOT
+868
+175
+1182
+461
+Average idea value
+Tick
+Value
+0.0
+1.0
+0.0
+100.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot avg-idea-value"
+
+MONITOR
+960
+34
+1066
+79
+NIL
+avg-idea-value
+17
+1
+11
 
 @#$#@#$#@
 ## WHAT IS IT?
