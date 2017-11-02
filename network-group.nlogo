@@ -15,11 +15,13 @@ end
 to load
   clear-all
   nw:load-matrix load-filename turtles links
-  layout-circle sort turtles radius
-  ask turtle (count turtles - 1) [ setxy 0 0 ]
+  (foreach (sort turtles) [
+    [t] -> ask t [move-to one-of patches]
+  ])
 end
 
 to prettify [ network ]
+  file-delete prettify-filename
   file-open prettify-filename
   file-write network
   file-close
@@ -121,9 +123,9 @@ end
 
 to go
   if avg-idea-val > 99 [stop]
-  ask one-of turtles [
-    exchange-ideas
-  ]
+  if collab-prob < 1 and avg-idea-val >= 70 [stop]
+  ask one-of turtles [ exchange-ideas ]
+  if random 100 < death-prob [ ask one-of turtles [ die ] ]
   calc-global-avg
   tick
 end
@@ -326,7 +328,7 @@ num-nodes
 num-nodes
 1
 100
-100.0
+10.0
 1
 1
 NIL
@@ -341,7 +343,7 @@ connectivity
 connectivity
 0
 1
-0.1
+0.5
 .1
 1
 NIL
@@ -371,7 +373,7 @@ num-rows
 num-rows
 3
 29
-3.0
+29.0
 2
 1
 NIL
@@ -386,16 +388,16 @@ num-cols
 num-cols
 3
 29
-3.0
+29.0
 2
 1
 NIL
 HORIZONTAL
 
 INPUTBOX
-837
+809
 34
-972
+944
 94
 node-color
 85.0
@@ -616,9 +618,9 @@ NIL
 HORIZONTAL
 
 CHOOSER
-658
+664
 411
-816
+800
 456
 share-type
 share-type
@@ -644,9 +646,9 @@ NIL
 
 TEXTBOX
 691
-13
+14
 775
-31
+32
 slider variables
 11
 0.0
@@ -663,9 +665,9 @@ other variables
 1
 
 INPUTBOX
-837
+809
 154
-972
+944
 214
 miscom-color
 15.0
@@ -674,9 +676,9 @@ miscom-color
 Color
 
 TEXTBOX
-884
+856
 14
-920
+892
 32
 colors
 11
@@ -684,10 +686,10 @@ colors
 1
 
 MONITOR
-515
-466
-607
-511
+111
+464
+203
+509
 NIL
 avg-idea-val
 3
@@ -696,9 +698,9 @@ avg-idea-val
 
 PLOT
 210
-466
+465
 504
-664
+663
 avg-idea-val
 ticks
 idea value
@@ -736,22 +738,48 @@ collab-prob
 collab-prob
 0
 100
-2.0
+0.0
 1
 1
 NIL
 HORIZONTAL
 
 INPUTBOX
-837
+809
 94
-972
+944
 154
 collab-color
 65.0
 1
 0
 Color
+
+SLIDER
+664
+331
+800
+364
+death-prob
+death-prob
+0
+2
+0.0
+0.1
+1
+NIL
+HORIZONTAL
+
+MONITOR
+13
+464
+106
+509
+num turtles
+count turtles
+17
+1
+11
 
 @#$#@#$#@
 ## WHAT IS IT?
