@@ -15,7 +15,7 @@ end
 to load
   clear-all
   nw:load-matrix load-filename turtles links
-  layout-circle sort turtles 8
+  layout-circle sort turtles radius
   ask turtle (count turtles - 1) [ setxy 0 0 ]
 end
 
@@ -36,8 +36,9 @@ end
 
 to post-setup
   ask turtles [
-    set shape "circle" set size .5
-    set ideas n-values 8 [random 100]
+    set shape "circle"
+    set size 0.75
+    set ideas n-values 8 [ random 76 ]
     color-turtle
   ]
   calc-global-avg
@@ -50,7 +51,6 @@ end
 to setup
   pre-setup
   nw:generate-random turtles links num-nodes connectivity [ set color node-color ]
-  ask turtles [fd 6 set shape "circle" set size .5]
   layout-circle turtles radius
   post-setup
 end
@@ -64,7 +64,7 @@ end
 
 to watts-strogatz
   pre-setup
-  nw:generate-watts-strogatz turtles links num-nodes neighborhood-size connectivity [ fd 10 set color node-color ]
+  nw:generate-watts-strogatz turtles links num-nodes neighborhood-size connectivity [ set color node-color ]
   layout-circle turtles radius
   post-setup
 end
@@ -82,7 +82,7 @@ to lattice
     [ sprout 1 ]
   ask turtles [
     let neighbor-nodes turtle-set [ turtles-here ] of neighbors4
-    create-network-links-with neighbor-nodes
+    create-links-with neighbor-nodes
   ]
   ask turtles [
     setxy (xcor * (max-pxcor - 1) / (num-rows / 2 - 0.5))
@@ -120,7 +120,7 @@ end
 ;;;;;;;;;;;;;;;;
 
 to go
-  if ticks >= 10000 [stop]
+  if avg-idea-val > 99 [stop]
   ask one-of turtles [
     exchange-ideas
   ]
@@ -130,7 +130,8 @@ end
 
 to color-turtle
   set avg sum ideas / 8
-  set color scale-color node-color avg 0 100
+  set color scale-color node-color avg 0 101
+  set size 0.75
 end
 
 to calc-global-avg
@@ -145,12 +146,21 @@ to exchange-ideas
 
   ; get neighbor
   let neighbor one-of nw:turtles-in-radius 1
+  let t1 (who)
+  let t2 ([who] of neighbor)
+  if (t1 = t2) [ stop ]
+
+  ; highlight link
+  ask link t1 t2 [
+    set color yellow
+    set thickness 1
+  ]
+
+  ; get neighbor ideas
   let to_compare 0
   ask neighbor [
-     set to_compare ideas
-    set color share-color
+    set to_compare ideas
   ]
-  set color share-color
 
   ; sort or shuffle ideas
   if share-type = "best" [
@@ -172,6 +182,14 @@ to exchange-ideas
   while [ i < num-bits-to-share and j >= 0 ] [
     let comp1 item i ideas
     let comp2 item j to_compare
+
+    ; miscommunication
+    if random 100 < miscom-prob [
+      ask link t1 t2 [ set color miscom-color ]
+      set comp1 comp1 - random 100
+      set comp2 comp2 - random 100
+    ]
+
     ifelse comp1 < comp2
       [ set ideas replace-item i ideas comp2 ]
       [ set to_compare replace-item j to_compare comp1 ]
@@ -179,12 +197,26 @@ to exchange-ideas
     set i i + 1
   ]
 
-  ; update neightbor
+  ; collaboration of ideas
+  if random 100 < collab-prob [
+    ask link t1 t2 [ set color collab-color ]
+    let idea random 101
+    set ideas sort-by < ideas
+    set to_compare sort-by < to_compare
+    if item 0 ideas < idea [ set ideas replace-item 0 ideas idea ]
+    if item 0 to_compare < idea [ set to_compare replace-item 0 to_compare idea ]
+  ]
+
+  ; done
   ask neighbor [
     set ideas to_compare
     color-turtle
   ]
   color-turtle
+  ask link t1 t2 [
+    set color gray
+    set thickness 0.1
+  ]
 end
 
 
@@ -286,25 +318,25 @@ NIL
 1
 
 SLIDER
-660
-224
-796
-257
+664
+67
+800
+100
 num-nodes
 num-nodes
 1
 100
-50.0
+100.0
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-661
-264
-796
-297
+664
+100
+800
+133
 connectivity
 connectivity
 0
@@ -316,57 +348,57 @@ NIL
 HORIZONTAL
 
 SLIDER
-660
-185
-796
-218
+664
+34
+800
+67
 radius
 radius
 1
 15
-13.0
+15.0
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-661
-344
-796
-377
+664
+166
+800
+199
 num-rows
 num-rows
 3
 29
-9.0
+3.0
 2
 1
 NIL
 HORIZONTAL
 
 SLIDER
-661
-383
-796
-416
+664
+199
+800
+232
 num-cols
 num-cols
 3
 29
-9.0
+3.0
 2
 1
 NIL
 HORIZONTAL
 
 INPUTBOX
-660
+837
 34
-795
+972
 94
 node-color
-65.0
+85.0
 1
 0
 Color
@@ -406,15 +438,15 @@ NIL
 1
 
 SLIDER
-661
-303
-796
-336
+664
+133
+800
+166
 neighborhood-size
 neighborhood-size
 0
 10
-3.0
+1.0
 1
 1
 NIL
@@ -569,10 +601,10 @@ run
 1
 
 SLIDER
-661
-423
-796
-456
+664
+232
+800
+265
 num-bits-to-share
 num-bits-to-share
 0
@@ -584,25 +616,14 @@ NIL
 HORIZONTAL
 
 CHOOSER
-806
-34
-964
-79
+658
+411
+816
+456
 share-type
 share-type
 "best" "worst" "random"
-2
-
-SWITCH
-806
-85
-964
-118
-miscommunication?
-miscommunication?
-1
-1
--1000
+0
 
 BUTTON
 108
@@ -622,40 +643,40 @@ NIL
 1
 
 TEXTBOX
-687
-164
-771
-182
+691
+13
+775
+31
 slider variables
 11
 0.0
 1
 
 TEXTBOX
-842
-14
-925
-32
+694
+391
+777
+409
 other variables
 11
 0.0
 1
 
 INPUTBOX
-660
-100
-795
-160
-share-color
+837
+154
+972
+214
+miscom-color
 15.0
 1
 0
 Color
 
 TEXTBOX
-707
+884
 14
-743
+920
 32
 colors
 11
@@ -690,6 +711,47 @@ false
 "" ""
 PENS
 "default" 1.0 0 -16777216 true "" "plot avg-idea-val"
+
+SLIDER
+664
+265
+800
+298
+miscom-prob
+miscom-prob
+0
+100
+0.0
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+664
+298
+800
+331
+collab-prob
+collab-prob
+0
+100
+2.0
+1
+1
+NIL
+HORIZONTAL
+
+INPUTBOX
+837
+94
+972
+154
+collab-color
+65.0
+1
+0
+Color
 
 @#$#@#$#@
 ## WHAT IS IT?
