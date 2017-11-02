@@ -31,6 +31,14 @@ to pre-setup
   make-dict
 end
 
+to post-setup
+  create-ideas
+  ask turtles [
+    set shape "circle" set size .5
+    color-turtle
+  ]
+end
+
 to make-dict
   let arr1 [2 67 39]
   let arr2 [4 36]
@@ -40,7 +48,6 @@ to make-dict
   table:put dict arr2 0
   table:put dict arr3 .36
   set arr-dict dict
-  show arr-dict
 end
 
 
@@ -49,32 +56,28 @@ to setup
   nw:generate-random turtles links num-nodes connectivity [ set color node-color ]
   ask turtles [fd 6 set shape "circle" set size .5]
   layout-circle turtles radius
-  create-ideas
-  color-turtles
+  post-setup
 end
 
 to preferential-attachment
   pre-setup
   nw:generate-preferential-attachment turtles links num-nodes [ set color node-color ]
   layout-circle turtles radius
-  create-ideas
-  color-turtles
+  post-setup
 end
 
 to watts-strogatz
   pre-setup
   nw:generate-watts-strogatz turtles links num-nodes neighborhood-size connectivity [ fd 10 set color node-color ]
   layout-circle turtles radius
-  create-ideas
-  color-turtles
+  post-setup
 end
 
 to small-world
   pre-setup
   nw:generate-small-world turtles links num-rows num-cols 2.0 True
   layout-circle turtles radius
-  create-ideas
-  color-turtles
+  post-setup
 end
 
 to lattice
@@ -83,8 +86,7 @@ to lattice
   (foreach (sort turtles) (sort patches) [
     [t p] -> ask t [ move-to p ] ;; ask turtle to move to the specified patch
   ])
-  create-ideas
-  color-turtles
+  post-setup
 end
 
 to ring
@@ -92,8 +94,7 @@ to ring
   prettify "ring"
   nw:generate-ring turtles links num-nodes [ set color node-color ]
   layout-circle sort turtles radius
-  create-ideas
-  color-turtles
+  post-setup
 end
 
 to star
@@ -101,8 +102,7 @@ to star
   prettify "star"
   nw:generate-star turtles links num-nodes [ set color node-color ]
   layout-radial turtles links (turtle 0)
-  create-ideas
-  color-turtles
+  post-setup
 end
 
 to wheel
@@ -111,268 +111,94 @@ to wheel
   nw:generate-wheel turtles links num-nodes [ set color node-color ]
   layout-circle sort turtles 8
   ask turtle (count turtles - 1) [ setxy 0 0 ]
-  create-ideas
-  color-turtles
+  post-setup
 end
 
 
 ;; create ideas for each turtle
-
 to create-ideas
   (foreach (sort turtles) [
-    ;[t] -> ask t [ set ideas array:from-list n-values 8 [random 100] ]
-    [t] -> ask t [ set ideas n-values 8 [random 100] show ideas]
+    [t] -> ask t [ set ideas n-values 8 [random 100] ]
   ])
-  make-good-idea-set
 end
 
 
-;; recolor the turtles based on idea strength
-
-to color-turtles
-  ask turtles [
-    set shape "circle" set size .5
-    let result 0
-    (foreach (ideas) [
-      [val] -> set result result + val
-    ])
-    set awesomeness result / 8
-    set color scale-color node-color awesomeness 0 100
-  ]
+;; recolor the turtle based on idea strength
+to color-turtle
+  let result 0
+  (foreach (ideas) [
+    [val] -> set result result + val
+  ])
+  set awesomeness result / 8
+  set color scale-color node-color awesomeness 0 100
 end
 
 
 ;; run the model
 
 to go
-  if ticks >= 50 [stop] ; spec says 50 iterations
-  ask turtles [
+  if ticks >= 10000 [stop]
+  ask one-of turtles [
     exchange-ideas
   ]
-  color-turtles
   tick
 end
 
 ;; each turtle picks another turtle to exchange ideas with
 
 to exchange-ideas
-  output-show "comparing ideas"
-  let to_compare 0
+
+  ; get neighbor
   let neighbor one-of nw:turtles-in-radius 1
+  let to_compare 0
   ask neighbor [
      set to_compare ideas
+    set color share-color
   ]
+  set color share-color
 
-  ; sort ideas
+  ; sort or shuffle ideas
   if share-type = "best" [
     set ideas sort-by < ideas
     set to_compare sort-by < to_compare
   ]
   if share-type = "worst" [
     set ideas sort-by > ideas
-    set to_compare sort-by > to_compare
+    set to_compare sort-by < to_compare
+  ]
+  if share-type = "random" [
+    set ideas shuffle ideas
+    set to_compare shuffle to_compare
   ]
 
-  let min1 0
-  let min2 0
-  let max1 0
-
+  ; swap ideas
   let i 0
-  while [ i < num-bits-to-share ] [
-    let j 0
-    while [ j < num-bits-to-share ] [
-      ;print "comparing"
-      ;show ideas i
-      ;print "with"
-      ;show to_compare j
-
-      set j j + 1
-    ]
+  let j num-bits-to-share - 1
+  while [ i < num-bits-to-share and j >= 0 ] [
+    let comp1 item i ideas
+    let comp2 item j to_compare
+    ifelse comp1 < comp2
+      [ set ideas replace-item i ideas comp2 ]
+      [ set to_compare replace-item j to_compare comp1 ]
+    set j j - 1
     set i i + 1
   ]
 
-  ;show ideas
-  ;show to_compare
+  ; update neightbor
+  ask neighbor [
+    set ideas to_compare
+    color-turtle
+  ]
+  color-turtle
 end
-
-
-
-
-
-;; hardcoded good idea set
-
-to make-good-idea-set
-  let goodideas table:make
-
-  ;;for all permutations of 3
-  table:put goodideas [1 2 3] random 100;
-  table:put goodideas [1 2 4] random 100;
-  table:put goodideas [1 2 5] random 100;
-  table:put goodideas [1 2 6] random 100;
-  table:put goodideas [1 2 7] random 100;
-  table:put goodideas [1 2 8] random 100;
-  table:put goodideas [1 2 9] random 100;
-  table:put goodideas [1 2 10] random 100;
-
-  table:put goodideas [1 3 4] random 100;
-  table:put goodideas [1 3 5] random 100;
-  table:put goodideas [1 3 6] random 100;
-  table:put goodideas [1 3 7] random 100;
-  table:put goodideas [1 3 8] random 100;
-  table:put goodideas [1 3 9] random 100;
-  table:put goodideas [1 3 10] random 100;
-
-  table:put goodideas [1 4 5] random 100;
-  table:put goodideas [1 4 6] random 100;
-  table:put goodideas [1 4 7] random 100;
-  table:put goodideas [1 4 8] random 100;
-  table:put goodideas [1 4 9] random 100;
-  table:put goodideas [1 4 10] random 100;
-
-  table:put goodideas [1 5 6] random 100;
-  table:put goodideas [1 5 7] random 100;
-  table:put goodideas [1 5 8] random 100;
-  table:put goodideas [1 5 9] random 100;
-  table:put goodideas [1 5 10] random 100;
-
-  table:put goodideas [1 6 7] random 100;
-  table:put goodideas [1 6 8] random 100;
-  table:put goodideas [1 6 9] random 100;
-  table:put goodideas [1 6 10] random 100;
-
-  table:put goodideas [1 7 8] random 100;
-  table:put goodideas [1 7 9] random 100;
-  table:put goodideas [1 7 10] random 100;
-
-  table:put goodideas [1 8 9] random 100;
-  table:put goodideas [1 8 10] random 100;
-
-  table:put goodideas [1 9 10] random 100;
-
-
-  table:put goodideas [2 3 4] random 100;
-  table:put goodideas [2 3 5] random 100;
-  table:put goodideas [2 3 6] random 100;
-  table:put goodideas [2 3 7] random 100;
-  table:put goodideas [2 3 8] random 100;
-  table:put goodideas [2 3 9] random 100;
-  table:put goodideas [2 3 10] random 100;
-
-  table:put goodideas [2 4 5] random 100;
-  table:put goodideas [2 4 6] random 100;
-  table:put goodideas [2 4 7] random 100;
-  table:put goodideas [2 4 8] random 100;
-  table:put goodideas [2 4 9] random 100;
-  table:put goodideas [2 4 10] random 100;
-
-  table:put goodideas [2 5 6] random 100;
-  table:put goodideas [2 5 7] random 100;
-  table:put goodideas [2 5 8] random 100;
-  table:put goodideas [2 5 9] random 100;
-  table:put goodideas [2 5 10] random 100;
-
-  table:put goodideas [2 6 7] random 100;
-  table:put goodideas [2 6 8] random 100;
-  table:put goodideas [2 6 9] random 100;
-  table:put goodideas [2 6 10] random 100;
-
-  table:put goodideas [2 7 8] random 100;
-  table:put goodideas [2 7 9] random 100;
-  table:put goodideas [2 7 10] random 100;
-
-  table:put goodideas [2 8 9] random 100;
-  table:put goodideas [2 8 10] random 100;
-
-  table:put goodideas [2 9 10] random 100;
-
-  table:put goodideas [3 4 5] random 100;
-  table:put goodideas [3 4 6] random 100;
-  table:put goodideas [3 4 7] random 100;
-  table:put goodideas [3 4 8] random 100;
-  table:put goodideas [3 4 9] random 100;
-  table:put goodideas [3 4 10] random 100;
-
-  table:put goodideas [3 5 6] random 100;
-  table:put goodideas [3 5 7] random 100;
-  table:put goodideas [3 5 8] random 100;
-  table:put goodideas [3 5 9] random 100;
-  table:put goodideas [3 5 10] random 100;
-
-  table:put goodideas [3 6 7] random 100;
-  table:put goodideas [3 6 8] random 100;
-  table:put goodideas [3 6 9] random 100;
-  table:put goodideas [3 6 10] random 100;
-
-  table:put goodideas [3 7 8] random 100;
-  table:put goodideas [3 7 9] random 100;
-  table:put goodideas [3 7 10] random 100;
-
-  table:put goodideas [3 8 9] random 100;
-  table:put goodideas [3 8 10] random 100;
-
-  table:put goodideas [3 9 10] random 100;
-
-  table:put goodideas [4 5 6] random 100;
-  table:put goodideas [4 5 7] random 100;
-  table:put goodideas [4 5 8] random 100;
-  table:put goodideas [4 5 9] random 100;
-  table:put goodideas [4 5 10] random 100;
-
-  table:put goodideas [4 6 7] random 100;
-  table:put goodideas [4 6 8] random 100;
-  table:put goodideas [4 6 9] random 100;
-  table:put goodideas [4 6 10] random 100;
-
-  table:put goodideas [4 7 8] random 100;
-  table:put goodideas [4 7 9] random 100;
-  table:put goodideas [4 7 10] random 100;
-
-  table:put goodideas [4 8 9] random 100;
-  table:put goodideas [4 8 10] random 100;
-
-  table:put goodideas [4 9 10] random 100;
-
-  table:put goodideas [5 6 7] random 100;
-  table:put goodideas [5 6 8] random 100;
-  table:put goodideas [5 6 9] random 100;
-  table:put goodideas [5 6 10] random 100;
-
-  table:put goodideas [5 7 8] random 100;
-  table:put goodideas [5 7 9] random 100;
-  table:put goodideas [5 7 10] random 100;
-
-  table:put goodideas [5 8 9] random 100;
-  table:put goodideas [5 8 10] random 100;
-
-  table:put goodideas [5 9 10] random 100;
-
-  table:put goodideas [6 7 8] random 100;
-  table:put goodideas [6 7 9] random 100;
-  table:put goodideas [6 7 10] random 100;
-
-  table:put goodideas [6 8 9] random 100;
-  table:put goodideas [6 8 10] random 100;
-
-  table:put goodideas [6 9 10] random 100;
-
-  table:put goodideas [7 8 9] random 100;
-  table:put goodideas [7 8 10] random 100;
-
-  table:put goodideas [7 9 10] random 100;
-
-  table:put goodideas [8 9 10] random 100;
-
-  ;;print goodideas
-end
-
 
 
 
 @#$#@#$#@
 GRAPHICS-WINDOW
 209
-10
-650
+14
+646
 452
 -1
 -1
@@ -465,40 +291,40 @@ NIL
 1
 
 SLIDER
-661
-75
-797
-108
+660
+164
+796
+197
 num-nodes
 num-nodes
 1
 100
-10.0
+50.0
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-662
-115
-797
-148
+661
+204
+796
+237
 connectivity
 connectivity
 0
 1
-0.5
+0.1
 .1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-661
-36
-797
-69
+660
+125
+796
+158
 radius
 radius
 1
@@ -510,10 +336,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-804
-36
-939
-69
+803
+125
+938
+158
 num-rows
 num-rows
 2
@@ -525,10 +351,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-804
-75
-939
-108
+803
+164
+938
+197
 num-cols
 num-cols
 2
@@ -540,10 +366,10 @@ NIL
 HORIZONTAL
 
 INPUTBOX
-662
-311
-820
-371
+660
+36
+795
+96
 node-color
 65.0
 1
@@ -585,15 +411,15 @@ NIL
 1
 
 SLIDER
-662
-154
-797
-187
+661
+243
+796
+276
 neighborhood-size
 neighborhood-size
 0
 10
-0.0
+2.0
 1
 1
 NIL
@@ -748,35 +574,35 @@ run
 1
 
 SLIDER
-804
-115
-939
-148
+803
+204
+938
+237
 num-bits-to-share
 num-bits-to-share
 0
 8
-8.0
+4.0
 1
 1
 NIL
 HORIZONTAL
 
 CHOOSER
-662
-219
-820
-264
+661
+304
+819
+349
 share-type
 share-type
 "best" "worst" "random"
-1
+0
 
 SWITCH
-662
-270
-820
-303
+661
+355
+819
+388
 miscommunication?
 miscommunication?
 1
@@ -801,21 +627,42 @@ NIL
 1
 
 TEXTBOX
-758
-14
-842
-32
+757
+103
+841
+121
 slider variables
 11
 0.0
 1
 
 TEXTBOX
-767
-199
-850
-217
+766
+284
+849
+302
 other variables
+11
+0.0
+1
+
+INPUTBOX
+803
+36
+938
+96
+share-color
+14.0
+1
+0
+Color
+
+TEXTBOX
+781
+17
+817
+35
+colors
 11
 0.0
 1
