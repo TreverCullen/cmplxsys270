@@ -1,8 +1,11 @@
 extensions [ nw array table ]
-turtles-own [ ideas awesomeness ]
-globals [arr-dict]
+turtles-own [ ideas avg ]
+globals [ avg-idea-val ]
+undirected-link-breed [ network-links network-link ]
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; load and save a network
+;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 to save
   nw:save-matrix save-filename
@@ -22,34 +25,27 @@ to prettify [ network ]
   file-close
 end
 
-
-;; setup network
+;;;;;;;;;;;;;;;;
+;; network setup
+;;;;;;;;;;;;;;;;
 
 to pre-setup
   clear-all
   reset-ticks
-  make-dict
 end
 
 to post-setup
-  create-ideas
   ask turtles [
     set shape "circle" set size .5
+    set ideas n-values 8 [random 100]
     color-turtle
   ]
+  calc-global-avg
 end
 
-to make-dict
-  let arr1 [2 67 39]
-  let arr2 [4 36]
-  let arr3 [3 45 98 22]
-  let dict table:make
-  table:put dict arr1 .8
-  table:put dict arr2 0
-  table:put dict arr3 .36
-  set arr-dict dict
-end
-
+;;;;;;;;;;;;;;;;
+;; network types
+;;;;;;;;;;;;;;;;
 
 to setup
   pre-setup
@@ -82,10 +78,16 @@ end
 
 to lattice
   pre-setup
-  nw:generate-lattice-2d turtles links world-height world-width false [ set color node-color ]
-  (foreach (sort turtles) (sort patches) [
-    [t p] -> ask t [ move-to p ] ;; ask turtle to move to the specified patch
-  ])
+  ask patches with [abs pxcor < (num-rows / 2) and abs pycor < (num-cols / 2)]
+    [ sprout 1 ]
+  ask turtles [
+    let neighbor-nodes turtle-set [ turtles-here ] of neighbors4
+    create-network-links-with neighbor-nodes
+  ]
+  ask turtles [
+    setxy (xcor * (max-pxcor - 1) / (num-rows / 2 - 0.5))
+          (ycor * (max-pycor - 1) / (num-cols / 2 - 0.5))
+  ]
   post-setup
 end
 
@@ -109,42 +111,35 @@ to wheel
   pre-setup
   prettify "wheel"
   nw:generate-wheel turtles links num-nodes [ set color node-color ]
-  layout-circle sort turtles 8
-  ask turtle (count turtles - 1) [ setxy 0 0 ]
+  layout-radial turtles links (turtle (count turtles - 1))
   post-setup
 end
 
-
-;; create ideas for each turtle
-to create-ideas
-  (foreach (sort turtles) [
-    [t] -> ask t [ set ideas n-values 8 [random 100] ]
-  ])
-end
-
-
-;; recolor the turtle based on idea strength
-to color-turtle
-  let result 0
-  (foreach (ideas) [
-    [val] -> set result result + val
-  ])
-  set awesomeness result / 8
-  set color scale-color node-color awesomeness 0 100
-end
-
-
+;;;;;;;;;;;;;;;;
 ;; run the model
+;;;;;;;;;;;;;;;;
 
 to go
   if ticks >= 10000 [stop]
   ask one-of turtles [
     exchange-ideas
   ]
+  calc-global-avg
   tick
 end
 
+to color-turtle
+  set avg sum ideas / 8
+  set color scale-color node-color avg 0 100
+end
+
+to calc-global-avg
+  set avg-idea-val (sum [ avg ] of turtles) / (count turtles)
+end
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; each turtle picks another turtle to exchange ideas with
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 to exchange-ideas
 
@@ -198,8 +193,8 @@ end
 GRAPHICS-WINDOW
 209
 14
-646
-452
+650
+456
 -1
 -1
 13.121212121212123
@@ -292,9 +287,9 @@ NIL
 
 SLIDER
 660
-164
+224
 796
-197
+257
 num-nodes
 num-nodes
 1
@@ -307,9 +302,9 @@ HORIZONTAL
 
 SLIDER
 661
-204
+264
 796
-237
+297
 connectivity
 connectivity
 0
@@ -322,54 +317,54 @@ HORIZONTAL
 
 SLIDER
 660
-125
+185
 796
-158
+218
 radius
 radius
 1
 15
-10.0
+13.0
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-803
-125
-938
-158
+661
+344
+796
+377
 num-rows
 num-rows
+3
+29
+9.0
 2
-10
-2.0
-1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-803
-164
-938
-197
+661
+383
+796
+416
 num-cols
 num-cols
+3
+29
+9.0
 2
-10
-2.0
-1
 1
 NIL
 HORIZONTAL
 
 INPUTBOX
 660
-36
+34
 795
-96
+94
 node-color
 65.0
 1
@@ -412,14 +407,14 @@ NIL
 
 SLIDER
 661
-243
+303
 796
-276
+336
 neighborhood-size
 neighborhood-size
 0
 10
-2.0
+3.0
 1
 1
 NIL
@@ -461,9 +456,9 @@ NIL
 
 INPUTBOX
 12
-324
+328
 101
-384
+388
 save-filename
 network.txt
 1
@@ -472,9 +467,9 @@ String
 
 INPUTBOX
 109
-324
+328
 197
-384
+388
 load-filename
 network.txt
 1
@@ -483,9 +478,9 @@ String
 
 BUTTON
 12
-283
+287
 101
-316
+320
 load network
 load
 NIL
@@ -500,9 +495,9 @@ NIL
 
 BUTTON
 108
-283
+287
 197
-316
+320
 save network
 save
 NIL
@@ -517,9 +512,9 @@ NIL
 
 INPUTBOX
 13
-392
+396
 197
-452
+456
 prettify-filename
 pretty.txt
 1
@@ -528,9 +523,9 @@ String
 
 BUTTON
 12
-216
+218
 101
-249
+251
 NIL
 go
 T
@@ -555,9 +550,9 @@ setup
 
 TEXTBOX
 77
-260
+264
 132
-278
+282
 load/save
 11
 0.0
@@ -565,44 +560,44 @@ load/save
 
 TEXTBOX
 92
-196
+198
 117
-214
+216
 run
 11
 0.0
 1
 
 SLIDER
-803
-204
-938
-237
+661
+423
+796
+456
 num-bits-to-share
 num-bits-to-share
 0
 8
-4.0
+8.0
 1
 1
 NIL
 HORIZONTAL
 
 CHOOSER
-661
-304
-819
-349
+806
+34
+964
+79
 share-type
 share-type
 "best" "worst" "random"
-0
+2
 
 SWITCH
-661
-355
-819
-388
+806
+85
+964
+118
 miscommunication?
 miscommunication?
 1
@@ -611,9 +606,9 @@ miscommunication?
 
 BUTTON
 108
-216
+218
 196
-249
+251
 step
 go
 NIL
@@ -627,45 +622,74 @@ NIL
 1
 
 TEXTBOX
-757
-103
-841
-121
+687
+164
+771
+182
 slider variables
 11
 0.0
 1
 
 TEXTBOX
-766
-284
-849
-302
+842
+14
+925
+32
 other variables
 11
 0.0
 1
 
 INPUTBOX
-803
-36
-938
-96
+660
+100
+795
+160
 share-color
-14.0
+15.0
 1
 0
 Color
 
 TEXTBOX
-781
-17
-817
-35
+707
+14
+743
+32
 colors
 11
 0.0
 1
+
+MONITOR
+515
+466
+607
+511
+NIL
+avg-idea-val
+3
+1
+11
+
+PLOT
+210
+466
+504
+664
+avg-idea-val
+ticks
+idea value
+0.0
+10.0
+0.0
+100.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot avg-idea-val"
 
 @#$#@#$#@
 ## WHAT IS IT?
