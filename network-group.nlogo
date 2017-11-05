@@ -1,7 +1,6 @@
-extensions [ nw array table ]
+extensions [ nw ]
 turtles-own [ ideas avg ]
 globals [ avg-idea-val ]
-undirected-link-breed [ network-links network-link ]
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; load and save a network
@@ -66,6 +65,7 @@ end
 
 to watts-strogatz
   pre-setup
+  if (neighborhood-size * 2) > num-nodes [ set neighborhood-size floor(num-nodes / 2)  ]
   nw:generate-watts-strogatz turtles links num-nodes neighborhood-size connectivity [ set color node-color ]
   layout-circle turtles radius
   post-setup
@@ -96,6 +96,7 @@ end
 to ring
   pre-setup
   prettify "ring"
+  if (num-nodes < 3) [ set num-nodes 3 ]
   nw:generate-ring turtles links num-nodes [ set color node-color ]
   layout-circle sort turtles radius
   post-setup
@@ -112,6 +113,7 @@ end
 to wheel
   pre-setup
   prettify "wheel"
+  if (num-nodes < 4) [ set num-nodes 4 ]
   nw:generate-wheel turtles links num-nodes [ set color node-color ]
   layout-radial turtles links (turtle (count turtles - 1))
   post-setup
@@ -122,10 +124,15 @@ end
 ;;;;;;;;;;;;;;;;
 
 to go
-  if avg-idea-val > 99 [stop]
-  if collab-prob < 1 and avg-idea-val >= 70 [stop]
+  ; stop conditions
+  if (avg-idea-val > 99)
+    or (collab-prob < 1 and avg-idea-val >= 70)
+    or (ticks > 50000)
+  [stop]
+
+  ; model
   ask one-of turtles [ exchange-ideas ]
-  if random 100 < death-prob [ ask one-of turtles [ die ] ]
+  kill-turtle
   calc-global-avg
   tick
 end
@@ -134,6 +141,14 @@ to color-turtle
   set avg sum ideas / 8
   set color scale-color node-color avg 0 101
   set size 0.75
+end
+
+to kill-turtle
+  if count turtles > 1 [
+    if random 100 < death-prob [
+      ask one-of turtles [ die ]
+    ]
+  ]
 end
 
 to calc-global-avg
@@ -220,7 +235,6 @@ to exchange-ideas
     set thickness 0.1
   ]
 end
-
 
 
 @#$#@#$#@
@@ -328,7 +342,7 @@ num-nodes
 num-nodes
 1
 100
-10.0
+33.0
 1
 1
 NIL
@@ -343,7 +357,7 @@ connectivity
 connectivity
 0
 1
-0.5
+0.0
 .1
 1
 NIL
@@ -358,7 +372,7 @@ radius
 radius
 1
 15
-15.0
+11.0
 1
 1
 NIL
@@ -448,7 +462,7 @@ neighborhood-size
 neighborhood-size
 0
 10
-1.0
+0.0
 1
 1
 NIL
@@ -611,7 +625,7 @@ num-bits-to-share
 num-bits-to-share
 0
 8
-8.0
+4.0
 1
 1
 NIL
@@ -723,7 +737,7 @@ miscom-prob
 miscom-prob
 0
 100
-0.0
+25.0
 1
 1
 NIL
@@ -738,7 +752,7 @@ collab-prob
 collab-prob
 0
 100
-0.0
+50.0
 1
 1
 NIL
@@ -764,7 +778,7 @@ death-prob
 death-prob
 0
 2
-0.0
+0.2
 0.1
 1
 NIL
@@ -780,6 +794,23 @@ count turtles
 17
 1
 11
+
+BUTTON
+838
+228
+916
+261
+demo 1
+set radius 15\nset num-nodes 25\nset connectivity 25\nset neighborhood-size 1\nset num-rows 5\nset num-cols 5\nset num-bits-to-share 8\nset miscom-prob 0\nset collab-prob 0\nset death-prob 0.0\nlattice
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -1127,6 +1158,120 @@ NetLogo 6.0.2
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
+<experiments>
+  <experiment name="experiment" repetitions="5" runMetricsEveryStep="false">
+    <setup>small-world</setup>
+    <go>go</go>
+    <metric>ticks</metric>
+    <enumeratedValueSet variable="share-type">
+      <value value="&quot;random&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="collab-prob">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="collab-color">
+      <value value="65"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="connectivity">
+      <value value="0.5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="node-color">
+      <value value="85"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="death-prob">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="num-rows">
+      <value value="5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="num-cols">
+      <value value="5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="neighborhood-size">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="radius">
+      <value value="15"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="num-nodes">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="prettify-filename">
+      <value value="&quot;pretty.txt&quot;"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="num-bits-to-share" first="1" step="1" last="8"/>
+    <enumeratedValueSet variable="miscom-color">
+      <value value="15"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="save-filename">
+      <value value="&quot;network.txt&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="miscom-prob">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="load-filename">
+      <value value="&quot;network.txt&quot;"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="experiment" repetitions="5" runMetricsEveryStep="false">
+    <setup>lattice</setup>
+    <go>go</go>
+    <metric>ticks</metric>
+    <enumeratedValueSet variable="share-type">
+      <value value="&quot;random&quot;"/>
+      <value value="&quot;worst&quot;"/>
+      <value value="&quot;best&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="collab-prob">
+      <value value="100"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="collab-color">
+      <value value="65"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="connectivity">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="node-color">
+      <value value="85"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="death-prob">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="num-rows">
+      <value value="29"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="num-cols">
+      <value value="29"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="neighborhood-size">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="radius">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="num-nodes">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="prettify-filename">
+      <value value="&quot;pretty.txt&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="num-bits-to-share">
+      <value value="4"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="miscom-color">
+      <value value="15"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="save-filename">
+      <value value="&quot;network.txt&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="miscom-prob">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="load-filename">
+      <value value="&quot;network.txt&quot;"/>
+    </enumeratedValueSet>
+  </experiment>
+</experiments>
 @#$#@#$#@
 @#$#@#$#@
 default
